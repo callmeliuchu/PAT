@@ -1,80 +1,127 @@
 #include<iostream>
-#include<stdio.h>
-#include<stdlib.h>
+#include "vector"
+#include "algorithm"
 using namespace std;
-int parent[10];
-int n,m;
+int m,n;
+int MAX = 9999999;
+
+struct Edge{
+    int u,v,w,c;
+};
+
+vector<int>root;
+vector<int>root_size;
 
 
-struct edge{
-	int u,v,w;
-}edges[10];
-
-
-void UFset(){
-	for(int i=1;i<=n;i++){
-		parent[i] = -1;
-	}
+bool cmp(Edge& e1,Edge& e2){
+    return e1.w < e2.w;
 }
 
-int find(int loc){
-	int temp;
-	for(temp=loc;parent[temp] >= 0;temp = parent[temp]);
-	int x = loc;
-	while(temp != x){
-		int t = parent[i];
-		parent[x] = temp;
-		x = t;
-	}
-	return temp;
+int find_root(int u){
+    while(root[u] != u){
+        u = root[u];
+    }
+    return u;
 }
 
-void merge(int a,int b){
-	int r1 = find(a);
-	int r2 = find(b);
-	int tmp = parent[r1] + parent[r2];
-	if(parent[r1] > parent[r2]){
-		parent[r1] = r2;
-		parent[r2] = tmp;
-	}else{
-		parent[r2] = r1;
-		parent[r1] = tmp;
-	}
+void connect(int u,int v){
+    if(root_size[u] < root_size[v]){
+        root_size[v] += root_size[u];
+        root[u] = v;
+    }else{
+        root_size[u] += root_size[v];
+        root[v] = u;
+    }
 }
 
 
-void kruskal(){
-	int sumWeight = 0;
-	int num = 0;
-	int u,v;
-	UFset();
-	for(int i=0;i<m;i++){
-		u = edges[i].u;
-		v = edges[i].v;
-		if(find(u) != find(v)){
-			printf("%d %d:  %d",u,v,edges[i].w);
-			sumWeight += edges[i].w;
-			num++;
-			merge(u,v);
-		}
-	}
-	printf("MST is %d",sumWeight);
+void minTree(vector<Edge> usedEdges,vector<Edge> brokenEdges){
+    sort(brokenEdges.begin(),brokenEdges.end(),cmp);
+    vector<int>costs = vector<int>(n+1,0);
+    int max_val = 0;
+    for(int i=1;i<=n;i++){
+        for(int k=1;k<=n;k++){
+            root[k] = k;
+            root_size[k] = 1;
+        }
+        int part_nums = n-1;
+        for(Edge e : usedEdges){
+            if(e.u == i || e.v == i){
+                continue;
+            }
+            int parent_u = find_root(e.u);
+            int parent_v = find_root(e.v);
+            if(parent_u != parent_v){
+                connect(parent_v,parent_u);
+                part_nums -= 1;
+            }
+        }
+        for(Edge e : brokenEdges){
+            if(e.u == i || e.v == i){
+                continue;
+            }
+            int parent_u = find_root(e.u);
+            int parent_v = find_root(e.v);
+            if(parent_u != parent_v){
+                connect(parent_v,parent_u);
+                costs[i] += e.w;
+                part_nums -= 1;
+            }
+        }
+        if(part_nums > 1){
+            costs[i] = MAX;
+        }
+        max_val = max(costs[i],max_val);
+    }
+    if(max_val > 0){
+        bool flag = true;
+        for(int i=1;i<=n;i++){
+            if(costs[i] == max_val){
+                if(flag){
+                    flag = false;
+                    cout<<i;
+                }else{
+                    cout<<" "<<i;
+                }
+
+            }
+        }
+    }else{
+        cout<<0;
+    }
 }
 
-int cmp(const void *a, const void *b){
-	edge *e1 = (edge *)a;
-	edge *e2 = (edge *)b;
-	return e1->w - e2->w;
-}
+
+
+
+
+
+
+
+
 
 int main(){
-	n=7;
-	m=9;
-    int  arr[] ={1,2,28,1,6,10,2,3,16,2,7,14,3,4,12,4,5,22,4,7,18,5,6,25,5,7,24};
-    for(int i=0;i<n;i++){
-    	int u = arr[i*3];
-    	int v = arr[i*3+1];
-    	int cost = arr[i*3+2];
-    	cout<<u<<","<<v<<","<<cost<<endl;
+//    n =4;
+//    m = 5;
+//    int arr[] = {1,2,1,1,1,3,1,1,2,3,1,0,2,4,1,1,3,4,1,0};
+    cin>>n>>m;
+    root = vector<int>(n+1,0);
+    root_size = vector<int>(n+1,1);
+    vector<Edge> usedEdges;
+    vector<Edge> brokenEdges;
+    for(int i=0;i<m;i++){
+        Edge edge =  Edge();
+//        edge.u = arr[i*4];
+//        edge.v = arr[i*4+1];
+//        edge.w = arr[i*4+2];
+//        edge.c = arr[i*4+3];
+        cin>>edge.u>>edge.v>>edge.w>>edge.c;
+        if(edge.c == 0){
+            brokenEdges.push_back(edge);
+        }else{
+            usedEdges.push_back(edge);
+        }
     }
+    minTree(usedEdges,brokenEdges);
+
 }
