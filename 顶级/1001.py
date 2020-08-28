@@ -67,7 +67,7 @@ def min_tree(n,edges):
                 cost[i] += w
 
         if union.part_num(i) > 1:
-            cost[i] = max(cost[i],MAX)
+            cost[i] = MAX
 
         max_val = max(cost[i],max_val)
 
@@ -79,7 +79,7 @@ def min_tree(n,edges):
                     print(i,end='')
                     flag = False
                 else:
-                    print(' '+str(i))
+                    print(' '+str(i),end="")
         return
     print(0)
 
